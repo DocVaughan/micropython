@@ -1,4 +1,4 @@
-.. _quickref:
+.. _esp8266_quickref:
 
 Quick reference for the ESP8266
 ===============================
@@ -8,6 +8,15 @@ Quick reference for the ESP8266
     :width: 640px
 
 The Adafruit Feather HUZZAH board (image attribution: Adafruit).
+
+Below is a quick reference for ESP8266-based boards.  If it is your first time
+working with this board please consider reading the following sections first:
+
+.. toctree::
+   :maxdepth: 1
+
+   general.rst
+   tutorial/index.rst
 
 Installing MicroPython
 ----------------------
@@ -222,6 +231,17 @@ and is accessed via the :ref:`machine.I2C <machine.I2C>` class::
 
     buf = bytearray(10)     # create a buffer with 10 bytes
     i2c.writeto(0x3a, buf)  # write the given buffer to the slave
+
+Real time clock (RTC)
+---------------------
+
+See :ref:`machine.RTC <machine.RTC>` ::
+
+    from machine import RTC
+
+    rtc = RTC()
+    rtc.datetime((2017, 8, 23, 1, 12, 48, 0, 0)) # set a specific date and time
+    rtc.datetime() # get date and time
 
 Deep-sleep mode
 ---------------

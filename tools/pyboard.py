@@ -1,10 +1,39 @@
 #!/usr/bin/env python
+#
+# This file is part of the MicroPython project, http://micropython.org/
+#
+# The MIT License (MIT)
+#
+# Copyright (c) 2014-2016 Damien P. George
+# Copyright (c) 2017 Paul Sokolovsky
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
 """
 pyboard interface
 
 This module provides the Pyboard class, used to communicate with and
-control the pyboard over a serial USB connection.
+control a MicroPython device over a communication channel. Both real
+boards and emulated devices (e.g. running in QEMU) are supported.
+Various communication channels are supported, including a serial
+connection, telnet-style network connection, external process
+connection.
 
 Example usage:
 
@@ -52,11 +81,12 @@ def stdout_write_bytes(b):
     stdout.write(b)
     stdout.flush()
 
-class PyboardError(BaseException):
+class PyboardError(Exception):
     pass
 
 class TelnetToSerial:
     def __init__(self, ip, user, password, read_timeout=None):
+        self.tn = None
         import telnetlib
         self.tn = telnetlib.Telnet(ip, timeout=15)
         self.read_timeout = read_timeout
@@ -80,11 +110,8 @@ class TelnetToSerial:
         self.close()
 
     def close(self):
-        try:
+        if self.tn:
             self.tn.close()
-        except:
-            # the telnet object might not exist yet, so ignore this one
-            pass
 
     def read(self, size=1):
         while len(self.fifo) < size:
@@ -123,7 +150,7 @@ class ProcessToSerial:
 
     def __init__(self, cmd):
         import subprocess
-        self.subp = subprocess.Popen(cmd.split(), bufsize=0, shell=True, preexec_fn=os.setsid,
+        self.subp = subprocess.Popen(cmd, bufsize=0, shell=True, preexec_fn=os.setsid,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
         # Initially was implemented with selectors, but that adds Python3
@@ -319,7 +346,7 @@ class Pyboard:
         # check if we could exec command
         data = self.serial.read(2)
         if data != b'OK':
-            raise PyboardError('could not exec command (response: %s)' % data)
+            raise PyboardError('could not exec command (response: %r)' % data)
 
     def exec_raw(self, command, timeout=10, data_consumer=None):
         self.exec_raw_no_follow(command);

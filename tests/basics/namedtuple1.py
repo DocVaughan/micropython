@@ -1,8 +1,8 @@
 try:
     try:
-        from collections import namedtuple
-    except ImportError:
         from ucollections import namedtuple
+    except ImportError:
+        from collections import namedtuple
 except ImportError:
     print("SKIP")
     raise SystemExit
@@ -23,6 +23,9 @@ for t in T(1, 2), T(bar=1, foo=2):
     print([f for f in t])
 
     print(isinstance(t, tuple))
+
+# Create using positional and keyword args
+print(T(3, bar=4))
 
 try:
     t[0] = 200

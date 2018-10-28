@@ -5,6 +5,8 @@ ifneq ($(findstring undefine,$(.FEATURES)),)
 override undefine COPT
 override undefine CFLAGS_EXTRA
 override undefine LDFLAGS_EXTRA
+override undefine MICROPY_FORCE_32BIT
+override undefine CROSS_COMPILE
 override undefine FROZEN_DIR
 override undefine FROZEN_MPY_DIR
 override undefine BUILD
@@ -23,11 +25,11 @@ QSTR_DEFS = qstrdefsport.h
 UNAME_S := $(shell uname -s)
 
 # include py core make definitions
-include ../py/py.mk
+include $(TOP)/py/py.mk
 
-INC +=  -I.
-INC +=  -I..
+INC += -I.
 INC += -I$(BUILD)
+INC += -I$(TOP)
 
 # compiler settings
 CWARN = -Wall -Werror
@@ -44,8 +46,8 @@ COPT = -Os #-DNDEBUG
 endif
 
 # On OSX, 'gcc' is a symlink to clang unless a real gcc is installed.
-# The unix port of micropython on OSX must be compiled with clang,
-# while cross-compile ports require gcc, so we test here for OSX and 
+# The unix port of MicroPython on OSX must be compiled with clang,
+# while cross-compile ports require gcc, so we test here for OSX and
 # if necessary override the value of 'CC' set in py/mkenv.mk
 ifeq ($(UNAME_S),Darwin)
 CC = clang
@@ -65,10 +67,10 @@ SRC_C = \
 # Add fmode when compiling with mingw gcc
 COMPILER_TARGET := $(shell $(CC) -dumpmachine)
 ifneq (,$(findstring mingw,$(COMPILER_TARGET)))
-	SRC_C += windows/fmode.c
+	SRC_C += ports/windows/fmode.c
 endif
 
-OBJ = $(PY_O)
+OBJ = $(PY_CORE_O)
 OBJ += $(addprefix $(BUILD)/, $(SRC_C:.c=.o))
 
-include ../py/mkrules.mk
+include $(TOP)/py/mkrules.mk
